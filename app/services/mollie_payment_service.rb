@@ -71,6 +71,7 @@ class MolliePaymentService
   def create_payment
     amount = @order.total
     description = "Order #{@order.number}"
+    @issuer = @method == 'ideal' ? @issuer : nil #Only iDeal has Issuer
     response = mollie_client.prepare_payment(amount, description, @redirect_url, {order_id: @order.number}, @method, {issuer: @issuer, locale: "en"})
     status_object = StatusObject.new(response)
     if status_object.open?
@@ -87,7 +88,11 @@ class MolliePaymentService
 
       payment.pend!
     else
-      status_object.mollie_error = true
+      if response['error'] && response['error']['message']
+        status_object.add_error(response['error']['message'])
+      else
+        status_object.mollie_error = true
+      end
     end
 
     status_object

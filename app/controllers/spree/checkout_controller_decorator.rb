@@ -52,7 +52,7 @@ Spree::CheckoutController.class_eval do
     end
 
     def load_mollie_methods
-      return unless params[:state] == 'payment'
+      return unless params[:state] == 'payment' || @order.state == 'payment'
 
       payment_method = Spree::PaymentMethod.first
       service = MolliePaymentService.new(payment_method: payment_method)
