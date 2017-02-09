@@ -123,6 +123,15 @@ class MolliePaymentService
     mollie_client.issuers
   end
 
+  def get_payment
+    response = mollie_client.payment_status(@transaction_id)
+    if response['error']
+      false
+    else
+      response
+    end
+  end
+
   private
 
     def payment_status_in_mollie(payment_id)
@@ -131,7 +140,8 @@ class MolliePaymentService
 
     def mollie_client
       @client ||= begin
-        api_key = Spree::PaymentMethod::Mollie.first.get_preference(:api_key)
+        mollie = Spree::PaymentMethod.where(type: 'Spree::PaymentMethod::Mollie').first
+        api_key = mollie.get_preference(:api_key)
         Mollie::Client.new(api_key)
       end
     end

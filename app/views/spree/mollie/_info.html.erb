@@ -1,0 +1,7 @@
+<% if @method_names[@mollie_payment['data'][0]['method'].to_sym] %>
+  <%= @method_names[@mollie_payment['data'][0]['method'].to_sym] %>
+<% else %>
+  <%= @mollie_payment['data'][0]['method'].upcase %>
+<% end %>
+<br/>
+Transaction ID: <%= @transaction_id %>
