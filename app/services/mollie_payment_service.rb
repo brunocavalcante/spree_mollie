@@ -62,7 +62,13 @@ class MolliePaymentService
           payment.pend! unless payment.pending?
         when 'paid', 'paidout'
           payment.complete! unless payment.completed?
-          payment.order.next! unless payment.order.complete?
+
+          unless payment.order.complete?
+            payment.order.next!
+            if payment.order.state == 'payment'
+              payment.order.next!
+            end
+          end
       end
     end if payment
 
