@@ -78,7 +78,7 @@ class MolliePaymentService
     amount = @order.total
     description = "Order #{@order.number}"
     @issuer = @method == 'ideal' ? @issuer : nil #Only iDeal has Issuer
-    response = mollie_client.prepare_payment(amount, description, @redirect_url, {order_id: @order.number}, @method, {issuer: @issuer, locale: "en"})
+    response = mollie_client.prepare_payment(amount, description, @redirect_url, order_metadata(@order), @method, {issuer: @issuer, locale: "en"})
     status_object = StatusObject.new(response)
     if status_object.open?
       payment = @order.payments.build(
@@ -150,5 +150,22 @@ class MolliePaymentService
         api_key = mollie.get_preference(:api_key)
         Mollie::Client.new(api_key)
       end
+    end
+
+    def order_metadata(order)
+      params = {
+        order_id: order.number,
+        line_items: [],
+        adjustments: []
+      }
+      order.line_items.each_with_index do |li, index|
+        params[:line_items] << { "item_#{index + 1}" => "#{li.quantity}x #{li.sku} : #{li.price}" }
+      end
+      params[:adjustments] << { "#1" => "Shipment total: #{order.shipment_total}" }
+      order.all_adjustments.eligible.each_with_index do |adj, index|
+        params[:adjustments] << { "##{index + 2}" => "#{adj.label}: #{adj.amount}" }
+      end
+
+      params
     end
 end
